@@ -1,0 +1,11 @@
+*.sdf
+*.suo
+*.user
+*.pdb
+*.ilk
+*.exe
+*.opensdf
+*.aps
+*/Debug/*
+*/Release/*
+*/ipch/*

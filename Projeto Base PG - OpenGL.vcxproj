@@ -12,9 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Code\openGL_tutorial.cpp" />
+    <ClCompile Include="Code\Ponto3f.cpp" />
+    <ClCompile Include="Code\Vetor3f.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Code\openGL_tutorial.h" />
+    <ClInclude Include="Code\Ponto3f.h" />
+    <ClInclude Include="Code\Vetor3f.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1F1971E4-3C3C-4098-A4A3-E06B8EB846AA}</ProjectGuid>
@@ -46,8 +50,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(SolutionDir)Intermediary\$(Configuration)</IntDir>
-    <OutDir>$(SolutionDir)Output\$(Configuration)</OutDir>
+    <IntDir>$(SolutionDir)Intermediary\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)Output\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(SolutionDir)Intermediary\$(Configuration)</IntDir>

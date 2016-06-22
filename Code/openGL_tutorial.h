@@ -11,9 +11,15 @@ http://www.cin.ufpe.br/~voxarlabs
 #ifndef _OPENGL_TUTORIAL_H_
 #define _OPENGL_TUTORIAL_H_
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <cstdio>
+#include <cmath>
 #include <cstdlib>
-#include <ctime>
 #include <gl/glut.h>
+
+#define ESC 27
+#define WIDTH 640
+#define HEIGHT 480
 
 #endif //_OPENGL_TUTORIAL_H_

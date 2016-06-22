@@ -16,6 +16,7 @@ http://www.cin.ufpe.br/~voxarlabs
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
+#include <cfloat>
 #include <gl/glut.h>
 
 #define ESC 27

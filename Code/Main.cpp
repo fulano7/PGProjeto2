@@ -21,6 +21,11 @@ struct Ponto3D
 	float x, y, z;
 };
 
+struct Ponto2D
+{
+	float x, y;
+};
+
 struct Camera
 {
 	Ponto3D C, N, V, U;
@@ -41,12 +46,14 @@ struct Luz
 
 Ponto3D* pontos_objeto_mundo;
 Ponto3D* pontos_objeto_vista;
-Ponto3D* pontos_objeto_tela;
+Ponto2D* pontos_objeto_tela;
 Ponto3D* normais_vertices;
 Triangulo* triangulos;
 Camera c;
 Luz luz;
 int num_pontos, num_triangulos;
+float z_buffer[WIDTH][HEIGHT];
+float theta_x, theta_y, theta_z_camera;
 
 static Ponto3D* produto_vetorial(Ponto3D* p1, Ponto3D* p2)
 {
@@ -148,9 +155,11 @@ static void ler_objeto(char * path)
 	FILE * p_arq = fopen(path, "r");
 	fscanf(p_arq, "%d %d", &num_pontos, &num_triangulos);
 	
-	pontos_objeto_mundo = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
+	pontos_objeto_mundo = (Ponto3D *) malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
 
 	pontos_objeto_vista = (Ponto3D *) malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
+
+	pontos_objeto_tela = (Ponto2D *) malloc((num_pontos + 1) * sizeof(Ponto2D)); // indice 1
 	
 	normais_vertices = (Ponto3D *) malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
 	for (int i = 1; i <= num_pontos; i++) normais_vertices[i].x = normais_vertices[i].y = normais_vertices[i].z = 0.0;
@@ -186,12 +195,48 @@ static void rotacao()
 	// TODO
 }
 
-static void mudanca_base()
+static void mudanca_base_luz()
 {
-	// TODO
 	// Luz de coordenada mundial para coordenada de vista
 
-	// Objeto para coordenada de vista
+	float x_vista, y_vista, z_vista;
+	
+	// P <- P-C
+	luz.Pl.x -= c.C.x;
+	luz.Pl.y -= c.C.y;
+	luz.Pl.z -= c.C.z;
+
+	// multiplicando pela matriz de mudanca de base
+	x_vista = produto_escalar(&luz.Pl, &c.U);
+	y_vista = produto_escalar(&luz.Pl, &c.V);
+	z_vista = produto_escalar(&luz.Pl, &c.N);
+
+	luz.Pl.x = x_vista;
+	luz.Pl.y = y_vista;
+	luz.Pl.z = z_vista;
+}
+
+static void mudanca_base_objeto()
+{
+	// Objeto de coordenada mundial (na variavel pontos_objeto_vista) para coordenada de vista
+	float x_vista, y_vista, z_vista;
+
+	for (int i = 1; i <= num_pontos; i++)
+	{
+		// P <- P-C
+		pontos_objeto_vista[i].x -= c.C.x;
+		pontos_objeto_vista[i].y -= c.C.y;
+		pontos_objeto_vista[i].z -= c.C.z;
+
+		// multiplicando pela matriz de mudanca de base
+		x_vista = produto_escalar(&pontos_objeto_vista[i], &c.U);
+		y_vista = produto_escalar(&pontos_objeto_vista[i], &c.V);
+		z_vista = produto_escalar(&pontos_objeto_vista[i], &c.N);
+
+		pontos_objeto_vista[i].x = x_vista;
+		pontos_objeto_vista[i].y = y_vista;
+		pontos_objeto_vista[i].z = z_vista;
+	}
 }
 
 static void calcula_normais()
@@ -224,6 +269,27 @@ static void calcula_normais()
 	for (int i = 1; i <= num_pontos; i++) normalizar(&normais_vertices[i]);
 }
 
+static void calcula_pontos_tela()
+{
+	for (int i = 1; i <= num_pontos; i++)
+	{
+		pontos_objeto_tela[i].x = (c.d / c.hx) * (pontos_objeto_vista[i].x / pontos_objeto_vista[i].z);
+		pontos_objeto_tela[i].y = (c.d / c.hy) * (pontos_objeto_vista[i].y / pontos_objeto_vista[i].z);
+
+		pontos_objeto_tela[i].x = (int)((pontos_objeto_tela[i].x + 1) * WIDTH / 2);
+		pontos_objeto_tela[i].y = (int)((1 - pontos_objeto_tela[i].y) * HEIGHT / 2);
+	}
+}
+
+// inicializa z-buffer com valor maximo de float em todas as posicoes
+static void inicializa_z_buffer()
+{
+	for (int i = 0; i < WIDTH; i++)
+	{
+		for (int j = 0; j < HEIGHT; j++) z_buffer[i][j] = FLT_MAX;
+	}
+}
+
 // Função callback chamada para fazer o desenho
 void Desenha()
 {
@@ -247,10 +313,22 @@ void Inicializa (void)
 // Programa Principal 
 int main()
 {
-	/*ler_camera("Cameras/01_Camera.cfg");
+	/*
+	ler_camera("Cameras/01_Camera.cfg");
 	inicializar_camera();
 	ler_luz("iluminacao.txt");
-	ler_objeto("Objetos/01_Objeto.byu");*/
+	ler_objeto("Objetos/01_Objeto.byu");
+	printf("leu objeto\n");
+	mudanca_base_luz();
+	printf("mudou base luz\n");
+	mudanca_base_objeto();
+	printf("mudou base objeto\n");
+	calcula_normais();
+	printf("calculou normais\n");
+	calcula_pontos_tela();
+	printf("calculou pontos de tela\n");
+	inicializa_z_buffer();
+	printf("inicializou z-buffer\n");*/
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	//setar modo de exibição, nesse caso buffer duplo e modelo de cor RGB
 	glutInitWindowSize(WIDTH,HEIGHT);

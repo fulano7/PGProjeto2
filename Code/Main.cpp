@@ -190,9 +190,9 @@ static void ler_objeto(char * path)
 	fclose(p_arq);
 }
 
-static void rotacao()
+static void rotacoes()
 {
-	// TODO
+	// TODO rotacoes
 }
 
 static void mudanca_base_luz()
@@ -275,7 +275,8 @@ static void calcula_pontos_tela()
 	{
 		pontos_objeto_tela[i].x = (c.d / c.hx) * (pontos_objeto_vista[i].x / pontos_objeto_vista[i].z);
 		pontos_objeto_tela[i].y = (c.d / c.hy) * (pontos_objeto_vista[i].y / pontos_objeto_vista[i].z);
-
+		
+		// TODO ver se vai dar certo esses casts
 		pontos_objeto_tela[i].x = (int)((pontos_objeto_tela[i].x + 1) * WIDTH / 2);
 		pontos_objeto_tela[i].y = (int)((1 - pontos_objeto_tela[i].y) * HEIGHT / 2);
 	}
@@ -289,6 +290,9 @@ static void inicializa_z_buffer()
 		for (int j = 0; j < HEIGHT; j++) z_buffer[i][j] = FLT_MAX;
 	}
 }
+
+// TODO conversao por varredura
+//		TODO iluminacao
 
 // Função callback chamada para fazer o desenho
 void Desenha()

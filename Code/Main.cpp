@@ -39,7 +39,8 @@ struct Cor
 
 struct Luz
 {
-	Ponto3D Pl, Od;
+	Ponto3D Pl;
+	float Od[3];
 	Cor Ia, Il;
 	float ka, kd, ks, n;
 };
@@ -139,7 +140,7 @@ static void ler_luz(char * path)
 
 	fscanf(p_arq, "%f", &luz.kd);
 
-	fscanf(p_arq, "%f %f %f", &luz.Od.x, &luz.Od.y, &luz.Od.z);
+	fscanf(p_arq, "%f %f %f", &luz.Od[0], &luz.Od[1], &luz.Od[2]);
 
 	fscanf(p_arq, "%f", &luz.ks);
 
@@ -276,7 +277,6 @@ static void calcula_pontos_tela()
 		pontos_objeto_tela[i].x = (c.d / c.hx) * (pontos_objeto_vista[i].x / pontos_objeto_vista[i].z);
 		pontos_objeto_tela[i].y = (c.d / c.hy) * (pontos_objeto_vista[i].y / pontos_objeto_vista[i].z);
 		
-		// TODO ver se vai dar certo esses casts
 		pontos_objeto_tela[i].x = (int)((pontos_objeto_tela[i].x + 1) * WIDTH / 2);
 		pontos_objeto_tela[i].y = (int)((1 - pontos_objeto_tela[i].y) * HEIGHT / 2);
 	}
@@ -287,12 +287,170 @@ static void inicializa_z_buffer()
 {
 	for (int i = 0; i < WIDTH; i++)
 	{
-		for (int j = 0; j < HEIGHT; j++) z_buffer[i][j] = FLT_MAX;
+		for (int j = 0; j < HEIGHT; j++) z_buffer[i][j] = std::numeric_limits<float>::infinity();
 	}
 }
 
-// TODO conversao por varredura
-//		TODO iluminacao
+// testar
+static void ordenar_pontos(Ponto2D* desordenado[])
+{
+	Ponto2D* aux;
+	if (desordenado[1]->y < desordenado[0]->y)
+	{
+		aux = desordenado[0];
+		desordenado[0] = desordenado[1];
+		desordenado[1] = aux;
+	}
+	if (desordenado[2]->y < desordenado[0]->y)
+	{
+		aux = desordenado[0];
+		desordenado[0] = desordenado[2];
+		desordenado[2] = aux;
+	}
+	if (desordenado[1]->y > desordenado[2]->y)
+	{
+		aux = desordenado[2];
+		desordenado[2] = desordenado[1];
+		desordenado[1] = aux;
+	}
+}
+
+static void scanline(float xMin, float xMax, int yScan, Triangulo* t)
+{
+	// TODO scanline
+	for (int x = xMin; x <= xMax; x++)
+	{
+		// TODO
+		// calcular coordenadas baricentricas
+		// calcular ponto 3D
+		// consultar z-buffer
+		// iluminacao - pintar com phong
+	}
+}
+
+// testar
+																			// tem que passar o triangulo 2d para o scanline.
+static void scan_triangulo_flat_top(Ponto2D* p1, Ponto2D* p2, Ponto2D* p3, Triangulo* triangulo_2d)
+{
+	float dx_esquerda, dx_direita, altura;
+	float x1 = p1->x, x2 = p2->x, x3 = p3->x, y1 = p1->y, y3 = p3->y;
+	float xMin, xMax;
+	float aux;
+
+	altura = y3-y1;
+
+	if (x2 < x1)
+	{
+		aux = x2;
+		x2 = x1;
+		x1 = aux;
+	}
+
+	dx_esquerda = (x3 - x1) / altura;
+	dx_direita = (x3 - x2) / altura;
+
+	xMin = (float)x1;
+	xMax = (float)x2 + (float)0.5;
+
+	for (int yScan = y1; yScan <= y3; yScan++)
+	{
+		scanline(xMin, xMax, yScan, triangulo_2d);
+		xMin += dx_esquerda;
+		xMax += dx_direita;
+	}
+}
+
+// testar
+																			   // tem que passar o triangulo 2d para o scanline.
+static void scan_triangulo_flat_bottom(Ponto2D* p1, Ponto2D* p2, Ponto2D* p3, Triangulo* triangulo_2d)
+{
+	float dx_esquerda, dx_direita, altura;
+	float x1 = p1->x, x2 = p2->x, x3 = p3->x, y1 = p1->y, y3 = p3->y;
+	float xMin, xMax;
+	float aux;
+
+	altura = y3 - y1;
+
+	if (x3 < x2)
+	{
+		aux = x3;
+		x3 = x2;
+		x2 = aux;
+	}
+
+	dx_esquerda = (x2 - x1) / altura;
+	dx_direita = (x3 - x1) / altura;
+
+	xMin = (float)x1;
+	xMax = (float)x1; // vertice de cima
+
+	for (int yScan = y1; yScan <= y3; yScan++)
+	{
+		scanline(xMin, xMax, yScan, triangulo_2d);
+		xMin += dx_esquerda;
+		xMax += dx_direita;
+	}
+}
+
+// testar
+static void scan_conversion()
+{
+	int v1, v2, v3;
+	for (int i = 1; i <= num_triangulos; i++)
+	{
+		v1 = triangulos[i].v1;
+		v2 = triangulos[i].v2;
+		v3 = triangulos[i].v3;
+
+		Ponto2D* p1 = &pontos_objeto_tela[v1];
+		Ponto2D* p2 = &pontos_objeto_tela[v2];
+		Ponto2D* p3 = &pontos_objeto_tela[v3];
+
+		Ponto2D* desordenado[3] = {p1, p2, p3};
+
+		ordenar_pontos(desordenado);
+
+		Ponto2D* menor = desordenado[0];
+		Ponto2D* medio = desordenado[1];
+		Ponto2D* maior = desordenado[2];
+		/*
+
+		FLAT TOP
+
+		------
+		\    /
+		 \  /
+	      V	
+		
+		*/ 
+		if (menor->y == medio->y) scan_triangulo_flat_top(menor, medio, maior, &triangulos[i]);
+
+		/*
+		
+		FLAT BOTTOM
+
+		   ^
+		 /   \
+		/     \
+		-------
+		
+		*/
+
+
+		else if (medio->y == maior->y) scan_triangulo_flat_bottom(menor, medio, maior, &triangulos[i]);
+
+
+		// caso geral - divide o triangulo em 2 triangulos faceis de preencher
+		else
+		{
+			Ponto2D novo;
+			novo.x = menor->x + (int)(0.5 + (float)(medio->y - menor->y)*(float)(maior->x - menor->x) / (float)(maior->y - menor->y));
+			novo.y = medio->y;
+			scan_triangulo_flat_bottom(menor, &novo, medio, &triangulos[i]);
+			scan_triangulo_flat_top(medio, &novo, maior, &triangulos[i]);
+		}
+	}
+}
 
 // Função callback chamada para fazer o desenho
 void Desenha()

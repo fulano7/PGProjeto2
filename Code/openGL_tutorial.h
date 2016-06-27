@@ -18,6 +18,7 @@ http://www.cin.ufpe.br/~voxarlabs
 #include <cstdlib>
 #include <cfloat>
 #include <gl/glut.h>
+#include <limits>
 
 #define ESC 27
 #define WIDTH 640

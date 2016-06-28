@@ -239,7 +239,7 @@ static void mudanca_base_objeto()
 
 static void calcula_normais()
 {
-	Ponto3D* normal;
+	Ponto3D normal;
 	int v1, v2, v3;
 	for (int i = 1; i <= num_triangulos; i++)
 	{
@@ -248,19 +248,19 @@ static void calcula_normais()
 		v3 = triangulos[i].v3;
 
 		// ja vem normalizado.
-		normal_triangulo(normal, &pontos_objeto_vista[v1], &pontos_objeto_vista[v2], &pontos_objeto_vista[v3]);
+		normal_triangulo(&normal, &pontos_objeto_vista[v1], &pontos_objeto_vista[v2], &pontos_objeto_vista[v3]);
 
-		normais_vertices[v1].x += normal->x;
-		normais_vertices[v2].x += normal->x;
-		normais_vertices[v3].x += normal->x;
+		normais_vertices[v1].x += normal.x;
+		normais_vertices[v2].x += normal.x;
+		normais_vertices[v3].x += normal.x;
 
-		normais_vertices[v1].y += normal->y;
-		normais_vertices[v2].y += normal->y;
-		normais_vertices[v3].y += normal->y;
+		normais_vertices[v1].y += normal.y;
+		normais_vertices[v2].y += normal.y;
+		normais_vertices[v3].y += normal.y;
 
-		normais_vertices[v1].z += normal->z;
-		normais_vertices[v2].z += normal->z;
-		normais_vertices[v3].z += normal->z;
+		normais_vertices[v1].z += normal.z;
+		normais_vertices[v2].z += normal.z;
+		normais_vertices[v3].z += normal.z;
 	}
 
 	// normaliza as normais dos vertices

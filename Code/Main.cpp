@@ -55,13 +55,11 @@ int num_pontos, num_triangulos;
 float z_buffer[WIDTH][HEIGHT];
 float theta_x, theta_y, theta_z_camera;
 
-static Ponto3D* produto_vetorial(Ponto3D* p1, Ponto3D* p2)
+static void produto_vetorial(Ponto3D* resultado, Ponto3D* p1, Ponto3D* p2)
 {
-	Ponto3D *v = (Ponto3D *)malloc(sizeof(Ponto3D));
-	v->x = p1->y * p2->z - p1->z * p2->y;
-	v->y = p1->z * p2->x - p1->x * p2->z;
-	v->z = p1->x * p2->y - p1->y * p2->x;
-	return v;
+	resultado->x = p1->y * p2->z - p1->z * p2->y;
+	resultado->y = p1->z * p2->x - p1->x * p2->z;
+	resultado->z = p1->x * p2->y - p1->y * p2->x;
 }
 
 static void normalizar(Ponto3D* v)
@@ -72,7 +70,7 @@ static void normalizar(Ponto3D* v)
 	v->z /= l;
 }
 
-static Ponto3D* normal_triangulo(Ponto3D* v1, Ponto3D* v2, Ponto3D* v3)
+static Ponto3D* normal_triangulo(Ponto3D* resultado, Ponto3D* v1, Ponto3D* v2, Ponto3D* v3)
 {
 	Ponto3D v21, v31;
 	
@@ -84,11 +82,10 @@ static Ponto3D* normal_triangulo(Ponto3D* v1, Ponto3D* v2, Ponto3D* v3)
 	v31.y = v3->y - v1->y;
 	v31.z = v3->z - v1->z;
 	
-	Ponto3D* resp = produto_vetorial(&v21, &v31);
+	produto_vetorial(resultado, &v21, &v31);
 	
-	normalizar(resp);
-	
-	return resp;
+	normalizar(resultado);
+
 }
 
 static float produto_escalar(Ponto3D* p1, Ponto3D* p2)
@@ -124,7 +121,7 @@ static void inicializar_camera()
 	normalizar(&c.V);
 
 	// U = N x V
-	c.U = *(produto_vetorial(&c.N, &c.V));
+	produto_vetorial(&c.U, &c.N, &c.V);
 }
 
 static void ler_luz(char * path)
@@ -250,7 +247,7 @@ static void calcula_normais()
 		v3 = triangulos[i].v3;
 
 		// ja vem normalizado.
-		normal = normal_triangulo(&pontos_objeto_vista[v1], &pontos_objeto_vista[v2], &pontos_objeto_vista[v3]);
+		normal_triangulo(normal, &pontos_objeto_vista[v1], &pontos_objeto_vista[v2], &pontos_objeto_vista[v3]);
 
 		normais_vertices[v1].x += normal->x;
 		normais_vertices[v2].x += normal->x;

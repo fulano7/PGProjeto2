@@ -71,7 +71,7 @@ static void normalizar(Ponto3D* v)
 	v->z /= l;
 }
 
-static Ponto3D* normal_triangulo(Ponto3D* resultado, Ponto3D* v1, Ponto3D* v2, Ponto3D* v3)
+static void normal_triangulo(Ponto3D* resultado, Ponto3D* v1, Ponto3D* v2, Ponto3D* v3)
 {
 	Ponto3D v21, v31;
 	

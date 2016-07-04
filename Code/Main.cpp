@@ -74,7 +74,7 @@ static void normalizar(Ponto3D* v)
 static void normal_triangulo(Ponto3D* resultado, Ponto3D* v1, Ponto3D* v2, Ponto3D* v3)
 {
 	Ponto3D v21, v31;
-	
+
 	v21.x = v2->x - v1->x;
 	v21.y = v2->y - v1->y;
 	v21.z = v2->z - v1->z;
@@ -82,9 +82,9 @@ static void normal_triangulo(Ponto3D* resultado, Ponto3D* v1, Ponto3D* v2, Ponto
 	v31.x = v3->x - v1->x;
 	v31.y = v3->y - v1->y;
 	v31.z = v3->z - v1->z;
-	
+
 	produto_vetorial(resultado, &v21, &v31);
-	
+
 	normalizar(resultado);
 
 }
@@ -97,7 +97,7 @@ static float produto_escalar(Ponto3D* p1, Ponto3D* p2)
 static void ler_camera(char * path)
 {
 	FILE * p_arq = fopen(path, "r");
-	
+
 	fscanf(p_arq, "%f %f %f", &c.C.x, &c.C.y, &c.C.z);
 
 	fscanf(p_arq, "%f %f %f", &c.N.x, &c.N.y, &c.N.z);
@@ -152,23 +152,23 @@ static void ler_objeto(char * path)
 {
 	FILE * p_arq = fopen(path, "r");
 	fscanf(p_arq, "%d %d", &num_pontos, &num_triangulos);
-	
-	pontos_objeto_mundo = (Ponto3D *) malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
 
-	pontos_objeto_vista = (Ponto3D *) malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
+	pontos_objeto_mundo = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
 
-	pontos_objeto_tela = (Ponto2D *) malloc((num_pontos + 1) * sizeof(Ponto2D)); // indice 1
-	
-	normais_vertices = (Ponto3D *) malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
+	pontos_objeto_vista = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
+
+	pontos_objeto_tela = (Ponto2D *)malloc((num_pontos + 1) * sizeof(Ponto2D)); // indice 1
+
+	normais_vertices = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
 	for (int i = 1; i <= num_pontos; i++) normais_vertices[i].x = normais_vertices[i].y = normais_vertices[i].z = 0.0;
-	
-	triangulos = (Triangulo *) malloc((num_triangulos + 1)*sizeof(Triangulo)); // indice 1
-	
+
+	triangulos = (Triangulo *)malloc((num_triangulos + 1)*sizeof(Triangulo)); // indice 1
+
 	float x, y, z;
 	for (int i = 1; i <= num_pontos; i++)
 	{
 		fscanf(p_arq, "%f %f %f", &x, &y, &z);
-		
+
 		pontos_objeto_mundo[i].x = x;
 		pontos_objeto_mundo[i].y = y;
 		pontos_objeto_mundo[i].z = z;
@@ -179,7 +179,7 @@ static void ler_objeto(char * path)
 	for (int i = 1; i <= num_triangulos; i++)
 	{
 		fscanf(p_arq, "%d %d %d", &v1, &v2, &v3);
-		
+
 		triangulos[i].v1 = v1;
 		triangulos[i].v2 = v2;
 		triangulos[i].v3 = v3;
@@ -198,7 +198,7 @@ static void mudanca_base_luz()
 	// Luz de coordenada mundial para coordenada de vista
 
 	float x_vista, y_vista, z_vista;
-	
+
 	// P <- P-C
 	luz.Pl.x -= c.C.x;
 	luz.Pl.y -= c.C.y;
@@ -273,7 +273,7 @@ static void calcula_pontos_tela()
 	{
 		pontos_objeto_tela[i].x = (c.d / c.hx) * (pontos_objeto_vista[i].x / pontos_objeto_vista[i].z);
 		pontos_objeto_tela[i].y = (c.d / c.hy) * (pontos_objeto_vista[i].y / pontos_objeto_vista[i].z);
-		
+
 		pontos_objeto_tela[i].x = (int)((pontos_objeto_tela[i].x + 1) * WIDTH / 2);
 		pontos_objeto_tela[i].y = (int)((1 - pontos_objeto_tela[i].y) * HEIGHT / 2);
 	}
@@ -312,12 +312,50 @@ static void ordenar_pontos(Ponto2D* desordenado[])
 	}
 }
 
-static void scanline(float xMin, float xMax, int yScan, Triangulo* t)
+static void scanline(float xMin, float xMax, int yScan, Triangulo* t)// Ka * Ia + Kd*(N.L) * (Od * IL) + Ks *(R.V)^n * IL
 {
-	// TODO scanline
+	Ponto3D p3d, vetorNormal, V, L, R;
+	float r, g, b;
+	float aux;
 	for (int x = xMin; x <= xMax; x++)
 	{
-		// TODO
+		V.x = -p3d.x;
+		V.y = -p3d.y;
+		V.z = -p3d.z;
+		L.x = luz.Pl.x - p3d.x;
+		L.y = luz.Pl.y - p3d.y;
+		L.z = luz.Pl.z - p3d.z;
+		normalizar(&vetorNormal);
+		normalizar(&V);
+		normalizar(&L);
+
+		if (produto_escalar(&vetorNormal, &V) < 0) {
+			vetorNormal.x = -vetorNormal.x;
+			vetorNormal.y = -vetorNormal.y;
+			vetorNormal.z = -vetorNormal.z;
+		}
+		//colorir apenas com a ambiental KA
+		r = luz.ka * luz.Ia.r;
+		g = luz.ka * luz.Ia.g;
+		b = luz.ka * luz.Ia.b;
+		if (produto_escalar(&vetorNormal, &L) >= 0) {
+			aux = produto_escalar(&R, &V);
+			r += (luz.kd * produto_escalar(&vetorNormal, &L) * luz.Od[0] * luz.Il.r) + (luz.ks * pow(aux, luz.n) * luz.Il.r);
+			g += (luz.kd * produto_escalar(&vetorNormal, &L) * luz.Od[1] * luz.Il.g) + (luz.ks * pow(aux, luz.n) * luz.Il.g);
+			b += (luz.kd * produto_escalar(&vetorNormal, &L) * luz.Od[2] * luz.Il.b) + (luz.ks * pow(aux, luz.n) * luz.Il.b);
+		}
+
+		if (r > 255.0f) r = 255.0f;
+		if (g > 255.0f) g = 255.0f;
+		if (b > 255.0f) b = 255.0f;
+
+		glColor3f(r / 255.0f, g / 255.0f, b / 255.0f);
+		glBegin(GL_POINTS);
+		glVertex2i(x, yScan);
+		glEnd();
+
+
+
 		// calcular coordenadas baricentricas
 		// calcular ponto 3D
 		// consultar z-buffer
@@ -326,7 +364,7 @@ static void scanline(float xMin, float xMax, int yScan, Triangulo* t)
 }
 
 // testar
-																			// tem que passar o triangulo 2d para o scanline.
+// tem que passar o triangulo 2d para o scanline.
 static void scan_triangulo_flat_top(Ponto2D* p1, Ponto2D* p2, Ponto2D* p3, Triangulo* triangulo_2d)
 {
 	float dx_esquerda, dx_direita, altura;
@@ -334,7 +372,7 @@ static void scan_triangulo_flat_top(Ponto2D* p1, Ponto2D* p2, Ponto2D* p3, Trian
 	float xMin, xMax;
 	float aux;
 
-	altura = y3-y1;
+	altura = y3 - y1;
 
 	if (x2 < x1)
 	{
@@ -358,7 +396,7 @@ static void scan_triangulo_flat_top(Ponto2D* p1, Ponto2D* p2, Ponto2D* p3, Trian
 }
 
 // testar
-																			   // tem que passar o triangulo 2d para o scanline.
+// tem que passar o triangulo 2d para o scanline.
 static void scan_triangulo_flat_bottom(Ponto2D* p1, Ponto2D* p2, Ponto2D* p3, Triangulo* triangulo_2d)
 {
 	float dx_esquerda, dx_direita, altura;
@@ -403,7 +441,7 @@ static void scan_conversion()
 		Ponto2D* p2 = &pontos_objeto_tela[v2];
 		Ponto2D* p3 = &pontos_objeto_tela[v3];
 
-		Ponto2D* desordenado[3] = {p1, p2, p3};
+		Ponto2D* desordenado[3] = { p1, p2, p3 };
 
 		ordenar_pontos(desordenado);
 
@@ -416,21 +454,21 @@ static void scan_conversion()
 
 		------
 		\    /
-		 \  /
-	      V	
-		
-		*/ 
+		\  /
+		V
+
+		*/
 		if (menor->y == medio->y) scan_triangulo_flat_top(menor, medio, maior, &triangulos[i]);
 
 		/*
-		
+
 		FLAT BOTTOM
 
-		   ^
-		 /   \
+		^
+		/   \
 		/     \
 		-------
-		
+
 		*/
 
 
@@ -452,22 +490,25 @@ static void scan_conversion()
 // Função callback chamada para fazer o desenho
 void Desenha()
 {
-/*glMatrixMode(GL_MODELVIEW);
-//definir que todas as tranformações vão ser em cena (no desenho)
-     glLoadIdentity();*/
-                   
-     glFlush();
+	/*glMatrixMode(GL_MODELVIEW);
+	//definir que todas as tranformações vão ser em cena (no desenho)
+	glLoadIdentity();*/
+
+	glFlush();
 	//não sei exatamente o que faz, umas das coisas que não funciona sem.
 }
 
 // Inicializa parâmetros de rendering
-void Inicializa (void)
-{   
-    // Define a cor de fundo da janela de visualização como preta
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+void Inicializa(void)
+{
+	// Define a cor de fundo da janela de visualização como preta
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	//para ver os parametros da função (e de qualquer outra) usar ctrl+shift+spacebar
 	//dentro dos parênteses 
 }
+
+
+
 
 // Programa Principal 
 int main()
@@ -490,9 +531,9 @@ int main()
 	printf("inicializou z-buffer\n");*/
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	//setar modo de exibição, nesse caso buffer duplo e modelo de cor RGB
-	glutInitWindowSize(WIDTH,HEIGHT);
+	glutInitWindowSize(WIDTH, HEIGHT);
 	//tamanho da janela
-	glutInitWindowPosition(10,10);
+	glutInitWindowPosition(10, 10);
 	//onde a janela vai aparecer na tela do PC (acho isso inutil)
 	glutCreateWindow("janelinha");
 	//não lembro como criar 2 janelas, vejam ai isso se quiserem

@@ -334,15 +334,23 @@ static void scanline(float xMin, float xMax, int yScan, Triangulo* t)// Ka * Ia 
 			vetorNormal.y = -vetorNormal.y;
 			vetorNormal.z = -vetorNormal.z;
 		}
+
 		//colorir apenas com a ambiental KA
 		r = luz.ka * luz.Ia.r;
 		g = luz.ka * luz.Ia.g;
 		b = luz.ka * luz.Ia.b;
-		if (produto_escalar(&vetorNormal, &L) >= 0) {
+
+		float nL = produto_escalar(&vetorNormal, &L);
+		// colorir tambem com a difusa e a especular
+		if (nL >= 0) {
+			R.x = 2 * nL * (vetorNormal.x - L.x);
+			R.y = 2 * nL * (vetorNormal.y - L.y);
+			R.z = 2 * nL * (vetorNormal.z - L.z);
+			normalizar(&R);
 			aux = produto_escalar(&R, &V);
-			r += (luz.kd * produto_escalar(&vetorNormal, &L) * luz.Od[0] * luz.Il.r) + (luz.ks * pow(aux, luz.n) * luz.Il.r);
-			g += (luz.kd * produto_escalar(&vetorNormal, &L) * luz.Od[1] * luz.Il.g) + (luz.ks * pow(aux, luz.n) * luz.Il.g);
-			b += (luz.kd * produto_escalar(&vetorNormal, &L) * luz.Od[2] * luz.Il.b) + (luz.ks * pow(aux, luz.n) * luz.Il.b);
+			r += (luz.kd * nL * luz.Od[0] * luz.Il.r) + (luz.ks * pow(aux, luz.n) * luz.Il.r);
+			g += (luz.kd * nL * luz.Od[1] * luz.Il.g) + (luz.ks * pow(aux, luz.n) * luz.Il.g);
+			b += (luz.kd * nL * luz.Od[2] * luz.Il.b) + (luz.ks * pow(aux, luz.n) * luz.Il.b);
 		}
 
 		if (r > 255.0f) r = 255.0f;

@@ -212,8 +212,8 @@ static void calculaCentroide()
 
 static void rotacaoZ()
 {
-	double cosseno = cos(angulo * 180 / PI);
-	double seno = sin(angulo * 180 / PI);
+	double cosseno = cos(angulo * PI / 180);
+	double seno = sin(angulo * PI / 180);
 	for (int i = 1; i <= num_pontos; i++)
 	{
 		x_auxiliar = pontos_objeto_vista[i].x;
@@ -226,8 +226,8 @@ static void rotacaoZ()
 static void rotacaoY()
 {
 	calculaCentroide();
-	double cosseno = cos(angulo * 180 / PI);
-	double seno = sin(angulo * 180 / PI);
+	double cosseno = cos(angulo * PI / 180);
+	double seno = sin(angulo * PI / 180);
 
 	for (int i = 1; i <= num_pontos; i++) {
 		x_auxiliar = pontos_objeto_vista[i].x;
@@ -240,8 +240,8 @@ static void rotacaoY()
 static void rotacaoX()
 {
 	calculaCentroide();
-	double cosseno = cos(angulo * 180 / PI);
-	double seno = sin(angulo * 180 / PI);
+	double cosseno = cos(angulo * PI / 180);
+	double seno = sin(angulo * PI / 180);
 
 	for (int i = 1; i <= num_pontos; i++) {
 		y_auxiliar = pontos_objeto_vista[i].y;
@@ -619,6 +619,7 @@ void Desenha()
 
 	glPointSize(1.f);
 
+	calcula_normais();
 	calcula_pontos_tela();
 	inicializa_z_buffer();
 	scan_conversion();
@@ -645,8 +646,22 @@ void Desenha()
 	//dentro dos parênteses 
 }*/
 
+void myKeyboardAscii(unsigned char key, int x, int y)
+{
+	if (key == ESC) {
+		free(pontos_objeto_vista);
+		pontos_objeto_vista = 0;
+		free(pontos_objeto_tela);
+		pontos_objeto_tela = 0;
+		free(normais_vertices);
+		normais_vertices = 0;
+		free(triangulos);
+		triangulos = 0;
+		exit(0);
+	}
+}
 
-void myKeyboard(unsigned char key, int x, int y)
+void myKeyboard(int key, int x, int y)
 {
 	if (key == GLUT_KEY_F1) {
 		rotacaoX();
@@ -659,17 +674,6 @@ void myKeyboard(unsigned char key, int x, int y)
 	if (key == GLUT_KEY_F3) {
 		rotacaoZ();
 		glutPostRedisplay();
-	}
-	if(key == ESC) {
-		free(pontos_objeto_vista);
-		pontos_objeto_vista = 0;
-		free(pontos_objeto_tela);
-		pontos_objeto_tela = 0;
-		free(normais_vertices);
-		normais_vertices = 0;
-		free(triangulos);
-		triangulos = 0;
-		exit(0);
 	}
 }
 
@@ -688,7 +692,7 @@ void myreshape(GLsizei w, GLsizei h) {
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
-	angulo = 30;
+	angulo = 2;
 	
 	ler_camera("Cameras/01_Camera.cfg");
 	inicializar_camera();
@@ -699,8 +703,8 @@ int main(int argc, char **argv)
 	printf("mudou base luz\n");
 	mudanca_base_objeto();
 	printf("mudou base objeto\n");
-	calcula_normais();
-	printf("calculou normais\n");
+	//calcula_normais();
+	//printf("calculou normais\n");
 	//calcula_pontos_tela();
 	printf("calculou pontos de tela\n");
 	//inicializa_z_buffer();
@@ -717,7 +721,8 @@ int main(int argc, char **argv)
 	glutDisplayFunc(Desenha);
 	glutReshapeFunc(myreshape);
 	//callback da função que desenha na tela
-	glutKeyboardFunc(myKeyboard);
+	glutSpecialFunc(myKeyboard);
+	glutKeyboardFunc(myKeyboardAscii);
 	// Inicializa();
 	//inicializar alguns parametros do glut (nessa caso a cor do fundo da tela).
 	//cor que vai limpar o buffer

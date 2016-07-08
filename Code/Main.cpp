@@ -10,6 +10,7 @@ http://www.cin.ufpe.br/~voxarlabs
 */
 
 #include "openGL_tutorial.h"
+#define PI  3.14159265
 
 struct Triangulo
 {
@@ -45,7 +46,7 @@ struct Luz
 	float ka, kd, ks, n;
 };
 
-Ponto3D* pontos_objeto_mundo;
+//Ponto3D* pontos_objeto_mundo;
 Ponto3D* pontos_objeto_vista;
 Ponto2D* pontos_objeto_tela;
 Ponto3D* normais_vertices;
@@ -55,6 +56,11 @@ Luz luz;
 int num_pontos, num_triangulos;
 float z_buffer[WIDTH][HEIGHT];
 float theta_x, theta_y, theta_z_camera;
+float y_auxiliar;//pontos para realizar as rotações
+float x_auxiliar;
+float z_auxiliar;
+double angulo;
+Ponto3D centroideGlobal;
 
 static void produto_vetorial(Ponto3D* resultado, Ponto3D* p1, Ponto3D* p2)
 {
@@ -153,7 +159,7 @@ static void ler_objeto(char * path)
 	FILE * p_arq = fopen(path, "r");
 	fscanf(p_arq, "%d %d", &num_pontos, &num_triangulos);
 
-	pontos_objeto_mundo = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
+	//pontos_objeto_vista = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
 
 	pontos_objeto_vista = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
 
@@ -169,9 +175,9 @@ static void ler_objeto(char * path)
 	{
 		fscanf(p_arq, "%f %f %f", &x, &y, &z);
 
-		pontos_objeto_mundo[i].x = x;
-		pontos_objeto_mundo[i].y = y;
-		pontos_objeto_mundo[i].z = z;
+		pontos_objeto_vista[i].x = x;
+		pontos_objeto_vista[i].y = y;
+		pontos_objeto_vista[i].z = z;
 	}
 
 	int v1, v2, v3;
@@ -188,9 +194,61 @@ static void ler_objeto(char * path)
 	fclose(p_arq);
 }
 
-static void rotacoes()
+
+static void rotacaoZ()
 {
-	// TODO rotacoes
+	double cosseno = cos(angulo * 180 / PI);
+	double seno = sin(angulo * 180 / PI);
+	for (int i = 1; i <= num_pontos; i++)
+	{
+		x_auxiliar = pontos_objeto_vista[i].x;
+		y_auxiliar = pontos_objeto_vista[i].y;
+		pontos_objeto_vista[i].x = x_auxiliar*cosseno - y_auxiliar*seno;
+		pontos_objeto_vista[i].y = x_auxiliar*seno + y_auxiliar*cosseno;
+	}
+}
+
+static void rotacaoY()
+{
+	calculaCentroide();
+	double cosseno = cos(angulo * 180 / PI);
+	double seno = sin(angulo * 180 / PI);
+
+	for (int i = 1; i <= num_pontos; i++) {
+		x_auxiliar = pontos_objeto_vista[i].x;
+		z_auxiliar = pontos_objeto_vista[i].z;
+		pontos_objeto_vista[i].x = x_auxiliar*cosseno + z_auxiliar*seno - centroideGlobal.x*cosseno - centroideGlobal.z*seno + centroideGlobal.x;
+		pontos_objeto_vista[i].z = z_auxiliar*cosseno - x_auxiliar*seno + centroideGlobal.x*seno - centroideGlobal.z*cosseno + centroideGlobal.z;
+	}
+}
+
+static void rotacaoX()
+{
+	calculaCentroide();
+	double cosseno = cos(angulo * 180 / PI);
+	double seno = sin(angulo * 180 / PI);
+
+	for (int i = 1; i <= num_pontos; i++) {
+		y_auxiliar = pontos_objeto_vista[i].y;
+		z_auxiliar = pontos_objeto_vista[i].z;
+		pontos_objeto_vista[i].y = y_auxiliar*cosseno - z_auxiliar*seno - centroideGlobal.y*cosseno + centroideGlobal.z*seno + centroideGlobal.y;
+		pontos_objeto_vista[i].z = z_auxiliar*cosseno + y_auxiliar*seno - centroideGlobal.y*seno - centroideGlobal.z*cosseno + centroideGlobal.z;
+	}
+}
+
+static void calculaCentroide()
+{
+	Ponto3D centroide;
+	for (int i = 1; i <= num_pontos; i++) {
+		centroide.x += pontos_objeto_vista[i].x;
+		centroide.y += pontos_objeto_vista[i].y;
+		centroide.z += pontos_objeto_vista[i].z;
+	}
+	centroide.x = (centroide.x / num_pontos);
+	centroide.y = (centroide.y / num_pontos);
+	centroide.z = (centroide.z / num_pontos);
+
+	centroideGlobal = centroide;
 }
 
 static void mudanca_base_luz()
@@ -556,11 +614,26 @@ void Inicializa(void)
 }
 
 
-
+void myKeyboard(unsigned char key, int x, int y)
+{
+	if (key == GLUT_KEY_F1) {
+		rotacaoX();
+		glutPostRedisplay();
+	}
+	if (key == GLUT_KEY_F2) {
+		rotacaoY();
+		glutPostRedisplay();
+	}
+	if (key == GLUT_KEY_F3) {
+		rotacaoZ();
+		glutPostRedisplay();
+	}
+}
 
 // Programa Principal 
 int main()
 {
+	angulo = 30;
 	/*
 	ler_camera("Cameras/01_Camera.cfg");
 	inicializar_camera();
@@ -587,7 +660,8 @@ int main()
 	//não lembro como criar 2 janelas, vejam ai isso se quiserem
 	//criar um janela
 	glutDisplayFunc(Desenha);
-	//callback da função que dezenha na tela
+	//callback da função que desenha na tela
+	glutKeyboardFunc(myKeyboard);
 	Inicializa();
 	//inicializar alguns parametros do glut (nessa caso a cor do fundo da tela).
 	//cor que vai limpar o buffer

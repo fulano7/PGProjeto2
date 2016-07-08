@@ -312,6 +312,39 @@ static void ordenar_pontos(Ponto2D* desordenado[])
 	}
 }
 
+//subtraction of two points
+static Ponto3D sub_points(Ponto3D a, Ponto3D b) {
+	Ponto3D result;
+	result.x = a.x - b.x;
+	result.y = a.y - b.y;
+	result.z = a.z - b.z;
+	return result;
+}
+
+//dot product of two vectors that can be represented by points
+static float dot_product(Ponto3D a, Ponto3D b) {
+	float result = 0;
+	result += a.x * b.x;
+	result += a.y * b.y;
+	result += a.z * b.z;
+	return result;
+}
+
+//barycentric coordinates
+static void coord_baricentricas(Ponto3D p, Ponto3D ponto1, Ponto3D ponto2, Ponto3D ponto3, Ponto3D &baricentrica) {
+	Ponto3D v0 = sub_points(ponto2, ponto1), v1 = sub_points(ponto3, ponto1), v2 = sub_points(p, ponto1);
+	float d00 = dot_product(v0, v0);
+	float d01 = dot_product(v0, v1);
+	float d11 = dot_product(v1, v1);
+	float d20 = dot_product(v2, v0);
+	float d21 = dot_product(v2, v1);
+
+	float denom = d00 * d11 - d01 * d01;
+	baricentrica.y = (d11 * d20 - d01 * d21) / denom;
+	baricentrica.z = (d00 * d21 - d01 * d20) / denom;
+	baricentrica.x = 1.0f - baricentrica.y - baricentrica.z;
+}
+
 static void scanline(float xMin, float xMax, int yScan, Triangulo* t)// Ka * Ia + Kd*(N.L) * (Od * IL) + Ks *(R.V)^n * IL
 {
 	Ponto3D p3d, vetorNormal, V, L, R;

@@ -46,7 +46,6 @@ struct Luz
 	float ka, kd, ks, n;
 };
 
-//Ponto3D* pontos_objeto_mundo;
 Ponto3D* pontos_objeto_vista;
 Ponto2D* pontos_objeto_tela;
 Ponto3D* normais_vertices;
@@ -159,9 +158,8 @@ static void ler_luz(char * path)
 static void ler_objeto(char * path)
 {
 	FILE * p_arq = fopen(path, "r");
-	fscanf(p_arq, "%d %d", &num_pontos, &num_triangulos);
 
-	//pontos_objeto_vista = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
+	fscanf(p_arq, "%d %d", &num_pontos, &num_triangulos);
 
 	pontos_objeto_vista = (Ponto3D *)malloc((num_pontos + 1) * sizeof(Ponto3D)); // indice 1
 
@@ -199,6 +197,7 @@ static void ler_objeto(char * path)
 static void calculaCentroide()
 {
 	Ponto3D centroide;
+	centroide.x = centroide.y = centroide.z = 0.0f;
 	for (int i = 1; i <= num_pontos; i++) {
 		centroide.x += pontos_objeto_vista[i].x;
 		centroide.y += pontos_objeto_vista[i].y;
@@ -299,9 +298,9 @@ static void mudanca_base_objeto()
 	centroideGlobal.y -= c.C.y;
 	centroideGlobal.z -= c.C.z;
 
-	x_vista = produto_escalar(centroideGlobal, &c.U);
-	y_vista = produto_escalar(centroideGlobal, &c.V);
-	z_vista = produto_escalar(centroideGlobal, &c.N);
+	x_vista = produto_escalar(&centroideGlobal, &c.U);
+	y_vista = produto_escalar(&centroideGlobal, &c.V);
+	z_vista = produto_escalar(&centroideGlobal, &c.N);
 
 	centroideGlobal.x = x_vista;
 	centroideGlobal.y = y_vista;
@@ -426,52 +425,57 @@ static void scanline(float xMin, float xMax, int yScan, Triangulo* t)// Ka * Ia 
 		p3d.y = baricentrica.x * pontos_objeto_vista[t->v1].y + baricentrica.y * pontos_objeto_vista[t->v2].y + baricentrica.z * pontos_objeto_vista[t->v3].y;
 		p3d.z = baricentrica.x * pontos_objeto_vista[t->v1].z + baricentrica.y * pontos_objeto_vista[t->v2].z + baricentrica.z * pontos_objeto_vista[t->v3].z;
 		
-		vetorNormal.x = baricentrica.x * normais_vertices[t->v1].x + baricentrica.y * normais_vertices[t->v2].x + baricentrica.z * normais_vertices[t->v3].x;
-		vetorNormal.y = baricentrica.x * normais_vertices[t->v1].y + baricentrica.y * normais_vertices[t->v2].y + baricentrica.z * normais_vertices[t->v3].y;
-		vetorNormal.z = baricentrica.x * normais_vertices[t->v1].z + baricentrica.y * normais_vertices[t->v2].z + baricentrica.z * normais_vertices[t->v3].z;
+		// consulta ao z-buffer
+		if (x >= 0 && yScan >= 0 && x < WIDTH && yScan < HEIGHT && p3d.z < z_buffer[x][yScan])
+		{
+			z_buffer[x][yScan] = p3d.z;
+			vetorNormal.x = baricentrica.x * normais_vertices[t->v1].x + baricentrica.y * normais_vertices[t->v2].x + baricentrica.z * normais_vertices[t->v3].x;
+			vetorNormal.y = baricentrica.x * normais_vertices[t->v1].y + baricentrica.y * normais_vertices[t->v2].y + baricentrica.z * normais_vertices[t->v3].y;
+			vetorNormal.z = baricentrica.x * normais_vertices[t->v1].z + baricentrica.y * normais_vertices[t->v2].z + baricentrica.z * normais_vertices[t->v3].z;
 
-		V.x = -p3d.x;
-		V.y = -p3d.y;
-		V.z = -p3d.z;
-		L.x = luz.Pl.x - p3d.x;
-		L.y = luz.Pl.y - p3d.y;
-		L.z = luz.Pl.z - p3d.z;
-		normalizar(&vetorNormal);
-		normalizar(&V);
-		normalizar(&L);
+			V.x = -p3d.x;
+			V.y = -p3d.y;
+			V.z = -p3d.z;
+			L.x = luz.Pl.x - p3d.x;
+			L.y = luz.Pl.y - p3d.y;
+			L.z = luz.Pl.z - p3d.z;
+			normalizar(&vetorNormal);
+			normalizar(&V);
+			normalizar(&L);
 
-		if (produto_escalar(&vetorNormal, &V) < 0) {
-			vetorNormal.x = -vetorNormal.x;
-			vetorNormal.y = -vetorNormal.y;
-			vetorNormal.z = -vetorNormal.z;
+			if (produto_escalar(&vetorNormal, &V) < 0) {
+				vetorNormal.x = -vetorNormal.x;
+				vetorNormal.y = -vetorNormal.y;
+				vetorNormal.z = -vetorNormal.z;
+			}
+
+			//colorir apenas com a ambiental KA
+			r = luz.ka * luz.Ia.r;
+			g = luz.ka * luz.Ia.g;
+			b = luz.ka * luz.Ia.b;
+
+			float nL = produto_escalar(&vetorNormal, &L);
+			// colorir tambem com a difusa e a especular
+			if (nL >= 0) {
+				R.x = 2 * nL * (vetorNormal.x - L.x);
+				R.y = 2 * nL * (vetorNormal.y - L.y);
+				R.z = 2 * nL * (vetorNormal.z - L.z);
+				normalizar(&R);
+				aux = produto_escalar(&R, &V);
+				r += (luz.kd * nL * luz.Od[0] * luz.Il.r) + (luz.ks * pow(aux, luz.n) * luz.Il.r);
+				g += (luz.kd * nL * luz.Od[1] * luz.Il.g) + (luz.ks * pow(aux, luz.n) * luz.Il.g);
+				b += (luz.kd * nL * luz.Od[2] * luz.Il.b) + (luz.ks * pow(aux, luz.n) * luz.Il.b);
+			}
+
+			if (r > 255.0f) r = 255.0f;
+			if (g > 255.0f) g = 255.0f;
+			if (b > 255.0f) b = 255.0f;
+
+			glColor3f(r / 255.0f, g / 255.0f, b / 255.0f);
+			glBegin(GL_POINTS);
+			glVertex2i(x, yScan);
+			glEnd();
 		}
-
-		//colorir apenas com a ambiental KA
-		r = luz.ka * luz.Ia.r;
-		g = luz.ka * luz.Ia.g;
-		b = luz.ka * luz.Ia.b;
-
-		float nL = produto_escalar(&vetorNormal, &L);
-		// colorir tambem com a difusa e a especular
-		if (nL >= 0) {
-			R.x = 2 * nL * (vetorNormal.x - L.x);
-			R.y = 2 * nL * (vetorNormal.y - L.y);
-			R.z = 2 * nL * (vetorNormal.z - L.z);
-			normalizar(&R);
-			aux = produto_escalar(&R, &V);
-			r += (luz.kd * nL * luz.Od[0] * luz.Il.r) + (luz.ks * pow(aux, luz.n) * luz.Il.r);
-			g += (luz.kd * nL * luz.Od[1] * luz.Il.g) + (luz.ks * pow(aux, luz.n) * luz.Il.g);
-			b += (luz.kd * nL * luz.Od[2] * luz.Il.b) + (luz.ks * pow(aux, luz.n) * luz.Il.b);
-		}
-
-		if (r > 255.0f) r = 255.0f;
-		if (g > 255.0f) g = 255.0f;
-		if (b > 255.0f) b = 255.0f;
-
-		glColor3f(r / 255.0f, g / 255.0f, b / 255.0f);
-		glBegin(GL_POINTS);
-		glVertex2i(x, yScan);
-		glEnd();
 
 
 
@@ -653,7 +657,7 @@ void myKeyboard(unsigned char key, int x, int y)
 		rotacaoZ();
 		glutPostRedisplay();
 	}
-	if(key == GLUT_KEY_ESC) {
+	if(key == ESC) {
 		free(pontos_objeto_vista);
 		pontos_objeto_vista = 0;
 		free(pontos_objeto_tela);

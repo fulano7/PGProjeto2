@@ -194,6 +194,20 @@ static void ler_objeto(char * path)
 	fclose(p_arq);
 }
 
+static void calculaCentroide()
+{
+	Ponto3D centroide;
+	for (int i = 1; i <= num_pontos; i++) {
+		centroide.x += pontos_objeto_vista[i].x;
+		centroide.y += pontos_objeto_vista[i].y;
+		centroide.z += pontos_objeto_vista[i].z;
+	}
+	centroide.x = (centroide.x / num_pontos);
+	centroide.y = (centroide.y / num_pontos);
+	centroide.z = (centroide.z / num_pontos);
+
+	centroideGlobal = centroide;
+}
 
 static void rotacaoZ()
 {
@@ -234,21 +248,6 @@ static void rotacaoX()
 		pontos_objeto_vista[i].y = y_auxiliar*cosseno - z_auxiliar*seno - centroideGlobal.y*cosseno + centroideGlobal.z*seno + centroideGlobal.y;
 		pontos_objeto_vista[i].z = z_auxiliar*cosseno + y_auxiliar*seno - centroideGlobal.y*seno - centroideGlobal.z*cosseno + centroideGlobal.z;
 	}
-}
-
-static void calculaCentroide()
-{
-	Ponto3D centroide;
-	for (int i = 1; i <= num_pontos; i++) {
-		centroide.x += pontos_objeto_vista[i].x;
-		centroide.y += pontos_objeto_vista[i].y;
-		centroide.z += pontos_objeto_vista[i].z;
-	}
-	centroide.x = (centroide.x / num_pontos);
-	centroide.y = (centroide.y / num_pontos);
-	centroide.z = (centroide.z / num_pontos);
-
-	centroideGlobal = centroide;
 }
 
 static void mudanca_base_luz()

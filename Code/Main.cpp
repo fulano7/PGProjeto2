@@ -613,34 +613,37 @@ static void scan_conversion()
 // Função callback chamada para fazer o desenho
 void Desenha()
 {
-	glClearColor(1.0, 0.0, 1.0, 1.0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	//glMatrixMode(GL_MODELVIEW);
-	//definir que todas as tranformações vão ser em cena (no desenho)
-	//glLoadIdentity();
+	glLoadIdentity();
+
+	glPointSize(1.f);
+
 	calcula_pontos_tela();
 	inicializa_z_buffer();
 	scan_conversion();
 	printf("yay, pontos\n");
-	glBegin(GL_POINTS);
-	glColor3f(0.0f, 0.0f, 0.0f);
-	for (int i = 1; i <= num_pontos; i++) {
+	// glBegin(GL_POINTS);
+	
+	//glColor3f(0.0f, 0.0f, 0.0f);
+	/*for (int i = 1; i <= num_pontos; i++) {
 		glVertex2f(pontos_objeto_tela[i].x, pontos_objeto_tela[i].y);
 	}
-	glEnd();
+	glEnd();*/
+
+	// libera recursos
 	glFlush();
 	printf("acabou\n");
-	//não sei exatamente o que faz, umas das coisas que não funciona sem.
 }
 
 // Inicializa parâmetros de rendering
-void Inicializa()
+/*void Inicializa()
 {
 	// Define a cor de fundo da janela de visualização como preta
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	//para ver os parametros da função (e de qualquer outra) usar ctrl+shift+spacebar
 	//dentro dos parênteses 
-}
+}*/
 
 
 void myKeyboard(unsigned char key, int x, int y)
@@ -676,7 +679,9 @@ void myreshape(GLsizei w, GLsizei h) {
 	glLoadIdentity();
 	window_width = (GLfloat)w;
 	window_height = (GLfloat)h;
-	glOrtho(0, window_width, 0, window_height, -1.0, -1.0);
+	glOrtho(0, window_width, window_height, 0.f, -5.0, 5.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 }
 
 // Programa Principal 
@@ -700,12 +705,12 @@ int main(int argc, char **argv)
 	printf("calculou pontos de tela\n");
 	//inicializa_z_buffer();
 	printf("inicializou z-buffer\n");
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	//setar modo de exibição, nesse caso buffer duplo e modelo de cor RGB
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	//setar modo de exibição, nesse caso buffer simples e modelo de cor RGB
 	glutInitWindowSize(window_width, window_height);
 	//tamanho da janela
 	glutInitWindowPosition(10, 10);
-	//onde a janela vai aparecer na tela do PC (acho isso inutil)
+	//onde a janela vai aparecer na tela do PC
 	glutCreateWindow("janelinha");
 	//não lembro como criar 2 janelas, vejam ai isso se quiserem
 	//criar um janela
@@ -713,9 +718,11 @@ int main(int argc, char **argv)
 	glutReshapeFunc(myreshape);
 	//callback da função que desenha na tela
 	glutKeyboardFunc(myKeyboard);
-	Inicializa();
+	// Inicializa();
 	//inicializar alguns parametros do glut (nessa caso a cor do fundo da tela).
 	//cor que vai limpar o buffer
+	glMatrixMode(GL_MODELVIEW); // estou alterando a matrix do modelo da cena
+	glLoadIdentity();
 	glutMainLoop();
 	//começa a execução da maquina de estados do glut/opengl que controla as funções
 	//de callback (controlador de mouse, teclado, callback de controle de tela, etc).

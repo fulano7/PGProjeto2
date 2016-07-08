@@ -61,6 +61,8 @@ float x_auxiliar;
 float z_auxiliar;
 double angulo;
 Ponto3D centroideGlobal;
+GLfloat window_width = 600.0;
+GLfloat window_height = 600.0;
 
 static void produto_vetorial(Ponto3D* resultado, Ponto3D* p1, Ponto3D* p2)
 {
@@ -607,19 +609,31 @@ static void scan_conversion()
 // Função callback chamada para fazer o desenho
 void Desenha()
 {
-	/*glMatrixMode(GL_MODELVIEW);
+	glClearColor(1.0, 0.0, 1.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	//glMatrixMode(GL_MODELVIEW);
 	//definir que todas as tranformações vão ser em cena (no desenho)
-	glLoadIdentity();*/
-
+	//glLoadIdentity();
+	calcula_pontos_tela();
+	inicializa_z_buffer();
+	scan_conversion();
+	printf("yay, pontos\n");
+	glBegin(GL_POINTS);
+	glColor3f(0.0f, 0.0f, 0.0f);
+	for (int i = 1; i <= num_pontos; i++) {
+		glVertex2f(pontos_objeto_tela[i].x, pontos_objeto_tela[i].y);
+	}
+	glEnd();
 	glFlush();
+	printf("acabou\n");
 	//não sei exatamente o que faz, umas das coisas que não funciona sem.
 }
 
 // Inicializa parâmetros de rendering
-void Inicializa(void)
+void Inicializa()
 {
 	// Define a cor de fundo da janela de visualização como preta
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	//para ver os parametros da função (e de qualquer outra) usar ctrl+shift+spacebar
 	//dentro dos parênteses 
 }
@@ -652,11 +666,21 @@ void myKeyboard(unsigned char key, int x, int y)
 	}
 }
 
+void myreshape(GLsizei w, GLsizei h) {
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	window_width = (GLfloat)w;
+	window_height = (GLfloat)h;
+	glOrtho(0, window_width, 0, window_height, -1.0, -1.0);
+}
+
 // Programa Principal 
-int main()
+int main(int argc, char **argv)
 {
+	glutInit(&argc, argv);
 	angulo = 30;
-	/*
+	
 	ler_camera("Cameras/01_Camera.cfg");
 	inicializar_camera();
 	ler_luz("iluminacao.txt");
@@ -668,13 +692,13 @@ int main()
 	printf("mudou base objeto\n");
 	calcula_normais();
 	printf("calculou normais\n");
-	calcula_pontos_tela();
+	//calcula_pontos_tela();
 	printf("calculou pontos de tela\n");
-	inicializa_z_buffer();
-	printf("inicializou z-buffer\n");*/
+	//inicializa_z_buffer();
+	printf("inicializou z-buffer\n");
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	//setar modo de exibição, nesse caso buffer duplo e modelo de cor RGB
-	glutInitWindowSize(WIDTH, HEIGHT);
+	glutInitWindowSize(window_width, window_height);
 	//tamanho da janela
 	glutInitWindowPosition(10, 10);
 	//onde a janela vai aparecer na tela do PC (acho isso inutil)
@@ -682,6 +706,7 @@ int main()
 	//não lembro como criar 2 janelas, vejam ai isso se quiserem
 	//criar um janela
 	glutDisplayFunc(Desenha);
+	glutReshapeFunc(myreshape);
 	//callback da função que desenha na tela
 	glutKeyboardFunc(myKeyboard);
 	Inicializa();

@@ -273,7 +273,7 @@ static void mudanca_base_luz()
 
 static void mudanca_base_objeto()
 {
-	// Objeto de coordenada mundial (na variavel pontos_objeto_vista) para coordenada de vista
+	// Objeto de coordenadas mundiais (nas variaveis pontos_objeto_vista e centroideGlobal) para coordenada de vista
 	float x_vista, y_vista, z_vista;
 
 	for (int i = 1; i <= num_pontos; i++)
@@ -292,6 +292,18 @@ static void mudanca_base_objeto()
 		pontos_objeto_vista[i].y = y_vista;
 		pontos_objeto_vista[i].z = z_vista;
 	}
+
+	centroideGlobal.x -= c.C.x;
+	centroideGlobal.y -= c.C.y;
+	centroideGlobal.z -= c.C.z;
+
+	x_vista = produto_escalar(centroideGlobal, &c.U);
+	y_vista = produto_escalar(centroideGlobal, &c.V);
+	z_vista = produto_escalar(centroideGlobal, &c.N);
+
+	centroideGlobal.x = x_vista;
+	centroideGlobal.y = y_vista;
+	centroideGlobal.z = z_vista; 
 }
 
 static void calcula_normais()
@@ -626,6 +638,17 @@ void myKeyboard(unsigned char key, int x, int y)
 	if (key == GLUT_KEY_F3) {
 		rotacaoZ();
 		glutPostRedisplay();
+	}
+	if(key == GLUT_KEY_ESC) {
+		free(pontos_objeto_vista);
+		pontos_objeto_vista = 0;
+		free(pontos_objeto_tela);
+		pontos_objeto_tela = 0;
+		free(normais_vertices);
+		normais_vertices = 0;
+		free(triangulos);
+		triangulos = 0;
+		exit(0);
 	}
 }
 

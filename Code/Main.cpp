@@ -370,45 +370,52 @@ static void ordenar_pontos(Ponto2D* desordenado[])
 }
 
 //subtraction of two points
-static Ponto3D sub_points(Ponto3D a, Ponto3D b) {
-	Ponto3D result;
-	result.x = a.x - b.x;
-	result.y = a.y - b.y;
-	result.z = a.z - b.z;
+static Ponto2D sub_points(Ponto2D *a, Ponto2D *b) {
+	Ponto2D result;
+	result.x = a->x - b->x;
+	result.y = a->y - b->y;
 	return result;
 }
 
-//dot product of two vectors that can be represented by points
-static float dot_product(Ponto3D a, Ponto3D b) {
-	float result = 0;
-	result += a.x * b.x;
-	result += a.y * b.y;
-	result += a.z * b.z;
-	return result;
+static float produto_escalar_2d(Ponto2D *a, Ponto2D *b) {
+	return (a->x * b->x) + (a->y * b->y);
 }
 
 //barycentric coordinates
-static void coord_baricentricas(Ponto3D p, Ponto3D ponto1, Ponto3D ponto2, Ponto3D ponto3, Ponto3D &baricentrica) {
-	Ponto3D v0 = sub_points(ponto2, ponto1), v1 = sub_points(ponto3, ponto1), v2 = sub_points(p, ponto1);
-	float d00 = dot_product(v0, v0);
-	float d01 = dot_product(v0, v1);
-	float d11 = dot_product(v1, v1);
-	float d20 = dot_product(v2, v0);
-	float d21 = dot_product(v2, v1);
+static void coord_baricentricas(Ponto2D *p, Ponto2D *ponto1, Ponto2D *ponto2, Ponto2D *ponto3, Ponto3D *baricentrica) {
+	Ponto2D v0 = sub_points(ponto2, ponto1), v1 = sub_points(ponto3, ponto1), v2 = sub_points(p, ponto1);
+	float d00 = produto_escalar_2d(&v0, &v0);
+	float d01 = produto_escalar_2d(&v0, &v1);
+	float d11 = produto_escalar_2d(&v1, &v1);
+	float d20 = produto_escalar_2d(&v2, &v0);
+	float d21 = produto_escalar_2d(&v2, &v1);
 
 	float denom = d00 * d11 - d01 * d01;
-	baricentrica.y = (d11 * d20 - d01 * d21) / denom;
-	baricentrica.z = (d00 * d21 - d01 * d20) / denom;
-	baricentrica.x = 1.0f - baricentrica.y - baricentrica.z;
+	baricentrica->y = (d11 * d20 - d01 * d21) / denom;
+	baricentrica->z = (d00 * d21 - d01 * d20) / denom;
+	baricentrica->x = 1.0f - baricentrica->y - baricentrica->z;
 }
 
 static void scanline(float xMin, float xMax, int yScan, Triangulo* t)// Ka * Ia + Kd*(N.L) * (Od * IL) + Ks *(R.V)^n * IL
 {
-	Ponto3D p3d, vetorNormal, V, L, R;
+	Ponto3D p3d, vetorNormal, V, L, R, baricentrica;
+	Ponto2D p;
 	float r, g, b;
 	float aux;
 	for (int x = xMin; x <= xMax; x++)
 	{
+		p.x = x;
+		p.y = yScan;
+		coord_baricentricas(&p, &pontos_objeto_tela[t->v1], &pontos_objeto_tela[t->v2], &pontos_objeto_tela[t->v3], &baricentrica);
+
+		p3d.x = baricentrica.x * pontos_objeto_vista[t->v1].x + baricentrica.y * pontos_objeto_vista[t->v2].x + baricentrica.z * pontos_objeto_vista[t->v3].x;
+		p3d.y = baricentrica.x * pontos_objeto_vista[t->v1].y + baricentrica.y * pontos_objeto_vista[t->v2].y + baricentrica.z * pontos_objeto_vista[t->v3].y;
+		p3d.z = baricentrica.x * pontos_objeto_vista[t->v1].z + baricentrica.y * pontos_objeto_vista[t->v2].z + baricentrica.z * pontos_objeto_vista[t->v3].z;
+		
+		vetorNormal.x = baricentrica.x * normais_vertices[t->v1].x + baricentrica.y * normais_vertices[t->v2].x + baricentrica.z * normais_vertices[t->v3].x;
+		vetorNormal.y = baricentrica.x * normais_vertices[t->v1].y + baricentrica.y * normais_vertices[t->v2].y + baricentrica.z * normais_vertices[t->v3].y;
+		vetorNormal.z = baricentrica.x * normais_vertices[t->v1].z + baricentrica.y * normais_vertices[t->v2].z + baricentrica.z * normais_vertices[t->v3].z;
+
 		V.x = -p3d.x;
 		V.y = -p3d.y;
 		V.z = -p3d.z;

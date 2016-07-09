@@ -344,8 +344,8 @@ static void calcula_pontos_tela()
 		pontos_objeto_tela[i].x = (c.d / c.hx) * (pontos_objeto_vista[i].x / pontos_objeto_vista[i].z);
 		pontos_objeto_tela[i].y = (c.d / c.hy) * (pontos_objeto_vista[i].y / pontos_objeto_vista[i].z);
 
-		pontos_objeto_tela[i].x = (int)((pontos_objeto_tela[i].x + 1) * WIDTH / 2);
-		pontos_objeto_tela[i].y = (int)((1 - pontos_objeto_tela[i].y) * HEIGHT / 2);
+		pontos_objeto_tela[i].x = (int)((pontos_objeto_tela[i].x + 1) * window_width / 2);
+		pontos_objeto_tela[i].y = (int)((1 - pontos_objeto_tela[i].y) * window_height / 2);
 	}
 }
 

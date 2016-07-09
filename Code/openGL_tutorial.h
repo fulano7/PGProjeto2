@@ -21,7 +21,7 @@ http://www.cin.ufpe.br/~voxarlabs
 #include <limits>
 
 #define ESC 27
-#define WIDTH 640
-#define HEIGHT 480
+#define WIDTH 600
+#define HEIGHT 600
 
 #endif //_OPENGL_TUTORIAL_H_

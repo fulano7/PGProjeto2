@@ -49,6 +49,7 @@ struct Luz
 	Cor Ia, Il;
 	float ka, kd, ks, n;
 };
+bool b = false;
 Ponto3D* pontos_objeto_vista;
 Ponto2D* pontos_objeto_tela;
 Ponto3D* normais_vertices;

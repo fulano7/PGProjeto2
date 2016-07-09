@@ -699,8 +699,6 @@ void myKeyboard(int key, int x, int y)
 		strcat(caminhoArquivo, NomeCamera);
 		strcat(caminhoArquivoObj, NomeObjeto);
 
-		ler_camera(caminhoArquivo);
-		inicializar_camera();
 		ler_objeto(caminhoArquivoObj);
 		ler_camera(caminhoArquivo);
 		inicializar_camera();
@@ -708,7 +706,7 @@ void myKeyboard(int key, int x, int y)
 		ler_objeto(caminhoArquivoObj);
 		printf("leu objeto\n");
 		mudanca_base_luz();
-		//}
+		
 		printf("mudou base luz\n");
 		mudanca_base_objeto();
 

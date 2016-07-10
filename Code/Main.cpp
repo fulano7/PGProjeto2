@@ -648,11 +648,8 @@ void integracao_java() {
 		char eixo[3];
 		fscanf(p_arq, " %lf", &angulo);
 		fscanf(p_arq, " %s", eixo);
-		printf("angulo: %lf\n", angulo);
-		printf("eixo: %s\n", eixo);
 
 		if (eixo[1] == 'x') {
-			printf("vai girar\n");
 			rotacaoX();
 		} else if(eixo[1] == 'y') {
 			rotacaoY();
@@ -665,7 +662,6 @@ void integracao_java() {
 		char cam_camera_f[1000], cam_objeto_f[1000];
 		fscanf(p_arq, " %s", cam_camera_f);
 		fscanf(p_arq, " %s", cam_objeto_f);
-		printf("cam_camera_f: %s\n", cam_camera_f);
 		
 		mudar_objeto(cam_camera_f, cam_objeto_f);
 	}

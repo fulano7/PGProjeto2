@@ -10,7 +10,11 @@ http://www.cin.ufpe.br/~voxarlabs
 */
 
 #include "openGL_tutorial.h"
+#include <cstring>
+#include <string>
 #define PI  3.14159265
+
+using namespace std;
 
 struct Triangulo
 {
@@ -45,7 +49,6 @@ struct Luz
 	Cor Ia, Il;
 	float ka, kd, ks, n;
 };
-
 Ponto3D* pontos_objeto_vista;
 Ponto2D* pontos_objeto_tela;
 Ponto3D* normais_vertices;
@@ -53,12 +56,20 @@ Triangulo* triangulos;
 Camera c;
 Luz luz;
 int num_pontos, num_triangulos;
+int auxObj = 0;
 float z_buffer[WIDTH][HEIGHT];
 float theta_x, theta_y, theta_z_camera;
 float y_auxiliar;//pontos para realizar as rotações
 float x_auxiliar;
 float z_auxiliar;
 double angulo;
+char caminhoArquivo[256] = "Cameras/";
+char caminhoArquivoObj[256] = "Objetos/";
+char NomeCamera[256] = "01_Camera.cfg";
+char NomeObjeto[256] = "01_Objeto.byu";
+
+
+
 Ponto3D centroideGlobal;
 GLfloat window_width = 600.0;
 GLfloat window_height = 600.0;
@@ -194,7 +205,8 @@ static void ler_objeto(char * path)
 	fclose(p_arq);
 }
 
-static void calculaCentroide()
+static void calculaCentroide() //faz o cálculo do centroide, que seria atribuir a média 
+							  //de cada coordenada dos pontos de vista à coordenada correspondente
 {
 	Ponto3D centroide;
 	centroide.x = centroide.y = centroide.z = 0.0f;
@@ -210,7 +222,8 @@ static void calculaCentroide()
 	centroideGlobal = centroide;
 }
 
-static void rotacaoZ()
+static void rotacaoZ() //realiza a rotação no eixo OZ, calculando previamente o seno e o cosseno do ângulo (em graus)
+					//para depois aplicar ao x e ao y dos pontos de vista a rotação 
 {
 	double cosseno = cos(angulo * PI / 180);
 	double seno = sin(angulo * PI / 180);
@@ -223,7 +236,8 @@ static void rotacaoZ()
 	}
 }
 
-static void rotacaoY()
+static void rotacaoY() //calcula a rotação no eixo paralelo a OY, levando em conta translações necessárias 
+						//usando as coordenadas do centroide
 {
 	calculaCentroide();
 	double cosseno = cos(angulo * PI / 180);
@@ -237,7 +251,8 @@ static void rotacaoY()
 	}
 }
 
-static void rotacaoX()
+static void rotacaoX() //calcula a rotação no eixo paralelo a OX, levando em conta translações necessárias
+						//usando as coordenadas do centroide
 {
 	calculaCentroide();
 	double cosseno = cos(angulo * PI / 180);
@@ -293,7 +308,7 @@ static void mudanca_base_objeto()
 		pontos_objeto_vista[i].y = y_vista;
 		pontos_objeto_vista[i].z = z_vista;
 	}
-
+	//aplicando a mudança de base também no centroide
 	centroideGlobal.x -= c.C.x;
 	centroideGlobal.y -= c.C.y;
 	centroideGlobal.z -= c.C.z;
@@ -610,6 +625,52 @@ static void scan_conversion()
 	}
 }
 
+void mudar_objeto(char *cam_camera, char *cam_objeto) {
+	ler_camera(cam_camera);
+	inicializar_camera();
+	ler_luz("iluminacao.txt");
+	ler_objeto(cam_objeto);
+	mudanca_base_luz();
+
+	mudanca_base_objeto();
+
+	glutPostRedisplay();
+}
+
+void integracao_java() {
+	system("java -jar pg.jar");
+	FILE * p_arq = fopen("config.txt", "r");
+
+	char acao;
+
+	fscanf(p_arq, "%c", &acao);
+	if (acao == 'r') {
+		char eixo[3];
+		fscanf(p_arq, " %lf", &angulo);
+		fscanf(p_arq, " %s", eixo);
+		printf("angulo: %lf\n", angulo);
+		printf("eixo: %s\n", eixo);
+
+		if (eixo[1] == 'x') {
+			printf("vai girar\n");
+			rotacaoX();
+		} else if(eixo[1] == 'y') {
+			rotacaoY();
+		} else if (eixo[1] == 'z') {
+			rotacaoZ();
+		}
+		glutPostRedisplay();
+	}
+	else if (acao == 'm') {
+		char cam_camera_f[1000], cam_objeto_f[1000];
+		fscanf(p_arq, " %s", cam_camera_f);
+		fscanf(p_arq, " %s", cam_objeto_f);
+		printf("cam_camera_f: %s\n", cam_camera_f);
+		
+		mudar_objeto(cam_camera_f, cam_objeto_f);
+	}
+}
+
 // Função callback chamada para fazer o desenho
 void Desenha()
 {
@@ -623,7 +684,6 @@ void Desenha()
 	calcula_pontos_tela();
 	inicializa_z_buffer();
 	scan_conversion();
-	printf("yay, pontos\n");
 	// glBegin(GL_POINTS);
 	
 	//glColor3f(0.0f, 0.0f, 0.0f);
@@ -634,7 +694,7 @@ void Desenha()
 
 	// libera recursos
 	glFlush();
-	printf("acabou\n");
+	integracao_java();
 }
 
 // Inicializa parâmetros de rendering
@@ -661,22 +721,6 @@ void myKeyboardAscii(unsigned char key, int x, int y)
 	}
 }
 
-void myKeyboard(int key, int x, int y)
-{
-	if (key == GLUT_KEY_F1) {
-		rotacaoX();
-		glutPostRedisplay();
-	}
-	if (key == GLUT_KEY_F2) {
-		rotacaoY();
-		glutPostRedisplay();
-	}
-	if (key == GLUT_KEY_F3) {
-		rotacaoZ();
-		glutPostRedisplay();
-	}
-}
-
 void myreshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
@@ -686,29 +730,35 @@ void myreshape(GLsizei w, GLsizei h) {
 	glOrtho(0, window_width, window_height, 0.f, -5.0, 5.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+
+
 }
 
 // Programa Principal 
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
-	angulo = 2;
 	
-	ler_camera("Cameras/01_Camera.cfg");
-	inicializar_camera();
-	ler_luz("iluminacao.txt");
-	ler_objeto("Objetos/01_Objeto.byu");
-	printf("leu objeto\n");
-	mudanca_base_luz();
-	printf("mudou base luz\n");
+	//angulo = 2;
+	//if (auxObj == 0) {
+	//strcpy(NomeCamera, "01_Camera.cfg");
+	
+		strcat(caminhoArquivo, NomeCamera);
+		//strcpy(NomeObjeto, "01_Objeto");
+		strcat(caminhoArquivoObj, NomeObjeto);
+	
+		//sprintf("Cameras/%s",caminhoArquivo.c_str());
+		ler_camera(caminhoArquivo);
+		inicializar_camera();
+		ler_luz("iluminacao.txt");
+		ler_objeto(caminhoArquivoObj);
+		mudanca_base_luz();
+	//}
 	mudanca_base_objeto();
-	printf("mudou base objeto\n");
 	//calcula_normais();
 	//printf("calculou normais\n");
 	//calcula_pontos_tela();
-	printf("calculou pontos de tela\n");
 	//inicializa_z_buffer();
-	printf("inicializou z-buffer\n");
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 	//setar modo de exibição, nesse caso buffer simples e modelo de cor RGB
 	glutInitWindowSize(window_width, window_height);
@@ -716,12 +766,10 @@ int main(int argc, char **argv)
 	glutInitWindowPosition(10, 10);
 	//onde a janela vai aparecer na tela do PC
 	glutCreateWindow("janelinha");
-	//não lembro como criar 2 janelas, vejam ai isso se quiserem
 	//criar um janela
 	glutDisplayFunc(Desenha);
 	glutReshapeFunc(myreshape);
 	//callback da função que desenha na tela
-	glutSpecialFunc(myKeyboard);
 	glutKeyboardFunc(myKeyboardAscii);
 	// Inicializa();
 	//inicializar alguns parametros do glut (nessa caso a cor do fundo da tela).

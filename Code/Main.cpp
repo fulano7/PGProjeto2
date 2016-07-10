@@ -621,6 +621,58 @@ static void scan_conversion()
 	}
 }
 
+void mudar_objeto(char *cam_camera, char *cam_objeto) {
+	printf("vai ler a camera\n");
+	ler_camera(cam_camera);
+	printf("vai inicializar a camera\n");
+	inicializar_camera();
+	printf("vai ler a luz\n");
+	ler_luz("iluminacao.txt");
+	printf("vai ler o objeto\n");
+	ler_objeto(cam_objeto);
+	printf("leu objeto\n");
+	mudanca_base_luz();
+
+	printf("mudou base luz\n");
+	mudanca_base_objeto();
+
+	glutPostRedisplay();
+}
+
+void integracao_java() {
+	system("java -jar pg.jar");
+	FILE * p_arq = fopen("config.txt", "r");
+
+	char acao;
+
+	fscanf(p_arq, "%c", &acao);
+	if (acao == 'r') {
+		char eixo[3];
+		fscanf(p_arq, " %lf", &angulo);
+		fscanf(p_arq, " %s", eixo);
+		printf("angulo: %lf\n", angulo);
+		printf("eixo: %s\n", eixo);
+
+		if (eixo[1] == 'x') {
+			printf("vai girar\n");
+			rotacaoX();
+		} else if(eixo[1] == 'y') {
+			rotacaoY();
+		} else if (eixo[1] == 'z') {
+			rotacaoZ();
+		}
+		glutPostRedisplay();
+	}
+	else if (acao == 'm') {
+		char cam_camera_f[1000], cam_objeto_f[1000];
+		fscanf(p_arq, " %s", cam_camera_f);
+		fscanf(p_arq, " %s", cam_objeto_f);
+		printf("cam_camera_f: %s\n", cam_camera_f);
+		
+		mudar_objeto(cam_camera_f, cam_objeto_f);
+	}
+}
+
 // Função callback chamada para fazer o desenho
 void Desenha()
 {
@@ -646,6 +698,7 @@ void Desenha()
 	// libera recursos
 	glFlush();
 	printf("acabou\n");
+	integracao_java();
 }
 
 // Inicializa parâmetros de rendering
@@ -699,7 +752,6 @@ void myKeyboard(int key, int x, int y)
 		strcat(caminhoArquivo, NomeCamera);
 		strcat(caminhoArquivoObj, NomeObjeto);
 
-		ler_objeto(caminhoArquivoObj);
 		ler_camera(caminhoArquivo);
 		inicializar_camera();
 		ler_luz("iluminacao.txt");

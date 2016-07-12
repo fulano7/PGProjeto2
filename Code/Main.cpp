@@ -910,7 +910,6 @@ void myKeyboardAscii(unsigned char key, int x, int y)
 
 
 void myreshape(GLsizei w, GLsizei h) {
-	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	window_width = (GLfloat)w;

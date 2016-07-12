@@ -866,8 +866,6 @@ void integracao_java() {
 // Função callback chamada para fazer o desenho
 void Desenha()
 {
-	// cor de fundo: preta.
-	glClearColor(0.0, 0.0, 0.0, 1.0);
 	
 	// limpa buffer de cor
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -911,7 +909,6 @@ void myKeyboardAscii(unsigned char key, int x, int y)
 
 void myreshape(GLsizei w, GLsizei h) {
 	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
 	window_width = (GLfloat)w;
 	window_height = (GLfloat)h;
 	ortoMatriz(0, window_width, window_height, 0.f, -5.0, 5.0);

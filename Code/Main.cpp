@@ -73,6 +73,33 @@ char NomeObjeto[256] = "01_Objeto.byu";
 Ponto3D centroideGlobal;
 GLfloat window_width = 600.0;
 GLfloat window_height = 600.0;
+GLdouble orthoMatrix[16];
+GLfloat identidade[16];
+
+
+
+void ortoMatriz(GLdouble left, GLdouble right, GLdouble bot, GLdouble top, GLdouble zNear, GLdouble zFar) {
+
+	orthoMatrix[0] = (2 / (right - left));
+	orthoMatrix[1] = 0;
+	orthoMatrix[2] = 0;
+	orthoMatrix[3] = 0;
+	orthoMatrix[4] = 0;
+	orthoMatrix[5] = (2 / (top - bot));
+	orthoMatrix[6] = 0;
+	orthoMatrix[7] = 0;
+	orthoMatrix[8] = 0;
+	orthoMatrix[9] = 0;
+	orthoMatrix[10] = ((-2) / (zFar - zNear));
+	orthoMatrix[11] = 0;
+	orthoMatrix[12] = -((right + left) / (right - left));
+	orthoMatrix[13] = -((top + bot) / (top - bot));
+	orthoMatrix[14] = -((zFar + zNear) / (zFar - zNear));
+	orthoMatrix[15] = 1;
+	
+	
+		
+}
 
 // calcula o produto vetorial (a.k.a. produto cruzado) entre 2 vetores e armazena o resultado em "resultado".
 static void produto_vetorial(Ponto3D* resultado, Ponto3D* p1, Ponto3D* p2)
@@ -879,13 +906,17 @@ void myKeyboardAscii(unsigned char key, int x, int y)
 	}
 }
 
+
+
+
 void myreshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	window_width = (GLfloat)w;
 	window_height = (GLfloat)h;
-	glOrtho(0, window_width, window_height, 0.f, -5.0, 5.0);
+	ortoMatriz(0, window_width, window_height, 0.f, -5.0, 5.0);
+	glLoadMatrixd(orthoMatrix);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }

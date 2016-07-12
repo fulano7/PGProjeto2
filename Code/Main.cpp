@@ -141,6 +141,7 @@ static void inicializar_camera()
 
 	// U = N x V
 	produto_vetorial(&c.U, &c.N, &c.V);
+	printf("U = (%f, %f, %f) , N = (%f, %f, %f) , V = (%f, %f, %f)\n", c.U.x, c.U.y, c.U.z, c.N.x, c.N.y, c.N.z, c.V.x, c.V.y, c.V.z);
 }
 
 static void ler_luz(char * path)

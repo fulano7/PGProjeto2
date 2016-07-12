@@ -516,8 +516,8 @@ static void scanline(float xMin, float xMax, int yScan, Triangulo* t)
 		if (x >= 0 && yScan >= 0 && x < WIDTH && yScan < HEIGHT 
 			// depois, a consulta tradicional pra saber se o ponto deve ser visto por estar mais à frente.
 			&& p3d.z < z_buffer[x][yScan] 
-			// por ultimo, se o z é negativo, o ponto está atrás da câmera e não deve ser visto.
-			&& p3d.z >= 0)
+			// por ultimo, cortamos pontos que estejam entre o foco e o plano de vista.
+			&& p3d.z >= c.d)
 		{
 			// atualizando o z-buffer
 			z_buffer[x][yScan] = p3d.z;

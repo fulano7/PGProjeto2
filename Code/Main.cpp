@@ -9,6 +9,8 @@ http://www.cin.ufpe.br/~voxarlabs
 -----------------------------------------------------------------------------
 */
 
+#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" )
+
 #include "openGL_tutorial.h"
 #include <cstring>
 #include <string>
@@ -558,7 +560,7 @@ static void scanline(float xMin, float xMax, int yScan, Triangulo* t)
 	}
 }
 
-// percorre os pixels de um triangulo flat bottom. recebe como parametros:
+// percorre os pixels de um triangulo flat top. recebe como parametros:
 //    p1, p2, p3 os vertices desse triangulo.
 //    triangulo_2d, com o objetivo de passar ele como parametro para o scanline, que precisara recuperar os vertices 3d originais.
 static void scan_triangulo_flat_top(Ponto2D* p1, Ponto2D* p2, Ponto2D* p3, Triangulo* triangulo_2d)
@@ -635,7 +637,7 @@ static void scan_triangulo_flat_bottom(Ponto2D* p1, Ponto2D* p2, Ponto2D* p3, Tr
 		x2 = aux;
 	}
 
-	// p1 e p2 tem o mesmo y entao tanto faz.
+	// p2 e p3 tem o mesmo y entao tanto faz.
 	altura = y3 - y1;
 
 	/*
@@ -779,11 +781,25 @@ void mudar_objeto(char *cam_camera, char *cam_objeto) {
 }
 
 void integracao_java() {
-	system("java -jar pg.jar");
+	STARTUPINFOW si;
+	PROCESS_INFORMATION pi;
+	char comando[] = "javaw -jar pg.jar";
+	wchar_t w_comando[20];
+	mbstowcs(w_comando, comando, 18);
+	LPWSTR lpw_comando = w_comando;
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+	if (CreateProcessW(NULL, lpw_comando, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+	{
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
+	}
+
 	FILE * p_arq = fopen("config.txt", "r");
-
+	
 	char acao;
-
 	fscanf(p_arq, "%c", &acao);
 	if (acao == 'r') {
 		char eixo[3];
@@ -805,6 +821,18 @@ void integracao_java() {
 		fscanf(p_arq, " %s", cam_objeto_f);
 		
 		mudar_objeto(cam_camera_f, cam_objeto_f);
+	}
+	else if (acao == 'q')
+	{
+		free(pontos_objeto_vista);
+		pontos_objeto_vista = 0;
+		free(pontos_objeto_tela);
+		pontos_objeto_tela = 0;
+		free(normais_vertices);
+		normais_vertices = 0;
+		free(triangulos);
+		triangulos = 0;
+		exit(0);
 	}
 }
 

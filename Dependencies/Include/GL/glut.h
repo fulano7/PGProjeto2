@@ -1,5 +1,6 @@
 #ifndef __glut_h__
 #define __glut_h__
+#define GLUT_DISABLE_ATEXIT_HACK
 
 /* Copyright (c) Mark J. Kilgard, 1994, 1995, 1996, 1998. */
 

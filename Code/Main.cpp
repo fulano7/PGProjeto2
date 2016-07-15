@@ -556,16 +556,22 @@ static void scanline(float xMin, float xMax, int yScan, Triangulo* t)
 			b = luz.ka * luz.Ia.b;
 
 			float nL = produto_escalar(&vetorNormal, &L);
-			// colorir tambem com a difusa e a especular
+			// colorir tambem com a difusa
 			if (nL >= 0) {
-				R.x = 2 * nL * (vetorNormal.x - L.x);
-				R.y = 2 * nL * (vetorNormal.y - L.y);
-				R.z = 2 * nL * (vetorNormal.z - L.z);
+				r += (luz.kd * nL * luz.Od[0] * luz.Il.r);
+				g += (luz.kd * nL * luz.Od[1] * luz.Il.g);
+				b += (luz.kd * nL * luz.Od[2] * luz.Il.b);
+				R.x = (2 * nL * vetorNormal.x) - L.x;
+				R.y = (2 * nL * vetorNormal.y) - L.y;
+				R.z = (2 * nL * vetorNormal.z) - L.z;
 				normalizar(&R);
 				aux = produto_escalar(&R, &V);
-				r += (luz.kd * nL * luz.Od[0] * luz.Il.r) + (luz.ks * pow(aux, luz.n) * luz.Il.r);
-				g += (luz.kd * nL * luz.Od[1] * luz.Il.g) + (luz.ks * pow(aux, luz.n) * luz.Il.g);
-				b += (luz.kd * nL * luz.Od[2] * luz.Il.b) + (luz.ks * pow(aux, luz.n) * luz.Il.b);
+				// colorir tambem com a especular
+				if (aux >=0){
+					r += (luz.ks * pow(aux, luz.n) * luz.Il.r);
+					g += (luz.ks * pow(aux, luz.n) * luz.Il.g);
+					b += (luz.ks * pow(aux, luz.n) * luz.Il.b);
+				}
 			}
 
 			// se alguma coordenada de cor der acima de 255, truncamos em 255.
